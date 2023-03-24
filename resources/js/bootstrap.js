@@ -1,5 +1,4 @@
-import _ from 'lodash';
-window._ = _;
+import 'bootstrap';
 
 /**
  * We'll load the axios HTTP library which allows us to easily issue requests
@@ -26,9 +25,46 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 // window.Echo = new Echo({
 //     broadcaster: 'pusher',
 //     key: import.meta.env.VITE_PUSHER_APP_KEY,
-//     wsHost: import.meta.env.VITE_PUSHER_HOST ? import.meta.env.VITE_PUSHER_HOST : `ws-${import.meta.env.VITE_PUSHER_APP_CLUSTER}.pusher.com`,
+//     wsHost: import.meta.env.VITE_PUSHER_HOST ?? `ws-${import.meta.env.VITE_PUSHER_APP_CLUSTER}.pusher.com`,
 //     wsPort: import.meta.env.VITE_PUSHER_PORT ?? 80,
 //     wssPort: import.meta.env.VITE_PUSHER_PORT ?? 443,
 //     forceTLS: (import.meta.env.VITE_PUSHER_SCHEME ?? 'https') === 'https',
 //     enabledTransports: ['ws', 'wss'],
 // });
+
+axios.interceptors.request.use(
+    config => {
+        config.headers.Accept = 'application/json';
+
+        let token = document.cookie.split(";").find(indice => {
+            return indice.includes("token=");
+        });
+
+        token = token.split('=')[1];
+        token = 'bearer ' + token;
+
+        config.headers.Authorization = token;
+
+        return config;
+    },
+    error => {
+        return Promise.reject(error);
+    }
+);
+
+axios.interceptors.response.use(
+    response => {
+        return response;
+    },
+    error => {
+        if(error.response.status == 401 && error.response.data.message == "Token has expired") {
+            axios.post("http://127.0.0.1:8000/api/refresh")
+                .then(response => {
+                    document.cookie = 'token=' + response.data.token;
+                    window.location.reload();
+                });
+        }
+
+        return Promise.reject(error);
+    }
+);

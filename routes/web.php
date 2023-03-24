@@ -17,9 +17,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-//Route::resource('cliente', App\Http\Controllers\ClienteController::class);
-//Route::resource('carro', App\Http\Controllers\CarroController::class);
-//Route::resource('cliente', App\Http\Controllers\ClienteController::class);
-//Route::resource('locacao', App\Http\Controllers\LocacaoController::class);
-//Route::resource('marca', App\Http\Controllers\MarcaController::class);
-//Route::resource('modelo', App\Http\Controllers\ModeloController::class);
+Auth::routes();
+
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+
+Route::get('/marcas', function() {
+    return view('app.marcas');
+})->name('marcas')->middleware('auth');
